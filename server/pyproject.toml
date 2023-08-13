@@ -8,7 +8,7 @@ authors = ["Olivier Dehaene <olivier@huggingface.co>"]
 text-generation-server = 'text_generation_server.cli:app'
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.10,<3.13"
 protobuf = "^4.21.7"
 grpcio = "^1.51.1"
 grpcio-status = "^1.51.1"
@@ -30,6 +30,7 @@ transformers = "^4.31.0"
 einops = "^0.6.1"
 texttable = { version = "^1.6.7", optional = true }
 datasets = { version = "^2.14.0", optional = true }
+text-generation = "^0.6.0"
 peft = "^0.4.0"
 torch = {version = "^2.0.1+cu118", source = "pytorch-gpu-src"}
 scipy = "^1.11.1"

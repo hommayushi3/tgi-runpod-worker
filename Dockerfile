@@ -40,7 +40,7 @@ RUN cargo build --release
 FROM debian:bullseye-slim as pytorch-install
 
 ARG PYTORCH_VERSION=2.0.1
-ARG PYTHON_VERSION=3.9
+ARG PYTHON_VERSION=3.10
 # Keep in sync with `server/pyproject.toml
 ARG CUDA_VERSION=11.8
 ARG MAMBA_VERSION=23.1.0-1
@@ -148,13 +148,15 @@ ENV PATH=/opt/conda/bin:$PATH \
     CONDA_PREFIX=/opt/conda
 
 # Text Generation Inference base env
-ENV HUGGINGFACE_HUB_CACHE=/data \
+ENV HUGGINGFACE_HUB_CACHE /runpod-volume/hub \
+    TRANSFORMERS_CACHE /runpod-volume/hub \
     HF_HUB_ENABLE_HF_TRANSFER=1 \
     PORT=80
 
 WORKDIR /usr/src
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        git \
         libssl-dev \
         ca-certificates \
         make \
@@ -203,16 +205,13 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
         g++ \
         && rm -rf /var/lib/apt/lists/*
 
-# AWS Sagemaker compatbile image
-FROM base as sagemaker
-
-COPY sagemaker-entrypoint.sh entrypoint.sh
-RUN chmod +x entrypoint.sh
-
-ENTRYPOINT ["./entrypoint.sh"]
-
 # Final image
 FROM base
 
-ENTRYPOINT ["text-generation-launcher"]
-CMD ["--json-output"]
+WORKDIR /usr/src
+
+COPY handler.py /usr/src/handler.py
+COPY entrypoint.sh /usr/src/entrypoint.sh
+RUN chmod +x /usr/src/entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
