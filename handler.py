@@ -31,7 +31,7 @@ def concurrency_controller() -> bool:
     return request_counter.counter > 0
 
 # Create the text-generation-inference asynchronous client
-client = AsyncClient(base_url="http://localhost:80")
+client = AsyncClient(base_url="http://127.0.0.1:8080")
 
 # Get valid arguments for generate and generate_stream
 valid_non_stream_arguments = inspect.getfullargspec(client.generate).args
