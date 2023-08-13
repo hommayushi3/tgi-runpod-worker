@@ -45,9 +45,7 @@ temp_default_generate_params = copy(DEFAULT_GENERATE_PARAMS)
 for key in DEFAULT_GENERATE_PARAMS.keys():
     if key not in valid_non_stream_arguments and key not in valid_stream_arguments:
         warnings.warn(f"Warning: Invalid generate parameter: {key} passed in DEFAULT_GENERATE_PARAMS. Removing from DEFAULT_GENERATE_PARAMS.")
-        raise ValueError(
-            f"Invalid generate parameter: {key}. Valid parameters are: {valid_non_stream_arguments + valid_stream_arguments}"
-        )
+
     temp_default_generate_params.pop(key)
 DEFAULT_GENERATE_PARAMS = temp_default_generate_params
 
@@ -59,38 +57,47 @@ async def handler(job):
     await request_counter.increment()
     print(f"Starting request {job}, active requests: {request_counter.counter}")
     start = time.time()
+    try:
+        # Get job input
+        job_input = job['input']
+        prompt = job_input['prompt']
 
-    # Get job input
-    job_input = job['input']
-    prompt = job_input['prompt']
+        # Set Generate Params
+        generate_params = copy(DEFAULT_GENERATE_PARAMS)
+        generate_params.update(job_input.pop('generate_params', {}))
 
-    # Set Generate Params
-    generate_params = copy(DEFAULT_GENERATE_PARAMS)
-    generate_params.update(job_input.pop('generate_params', {}))
+        # Set Stream Option
+        stream = job_input.pop('stream', False)
 
-    # Set Stream Option
-    stream = job_input.pop('stream', False)
+        # Print the prompt and generate_params
+        print("**** PROMPT ****")
+        print(prompt)
+        print("**** GENERATE PARAMS ****")
+        print(generate_params)
+        print(f"**** STREAMING: {stream} ****")
 
-    # Print the prompt and generate_params
-    print("**** PROMPT ****")
-    print(prompt)
-    print("**** GENERATE PARAMS ****")
-    print(generate_params)
-    print(f"**** STREAMING: {stream} ****")
-
-    # Send request to Text Generation Inference Server and yield results
-    if stream:
-        results_generator = client.generate_stream(prompt, **generate_params)
-        async for response in results_generator:
-            if not response.token.special:
-                yield {"text": response.token.text}
-    else:
-        result = client.generate(prompt, **generate_params)
-        yield {"text": result.generated_text}
-
-    # Decrement the request counter
-    await request_counter.decrement()
-    print(f"Finished request in {int(time.time() - start)} seconds, active requests: {request_counter.counter}")
+        # Send request to Text Generation Inference Server and yield results
+        existing_keys = generate_params.keys()
+        if stream:
+            for key in existing_keys:
+                if key not in valid_stream_arguments:
+                    warnings.warn(f"Warning: Invalid generate_stream parameter: {key} passed in generate_params. Removing from generate_params.")
+                    generate_params.pop(key)
+            results_generator = client.generate_stream(prompt, **generate_params)
+            async for response in results_generator:
+                if not response.token.special:
+                    yield {"text": response.token.text}
+        else:
+            for key in existing_keys:
+                if key not in valid_non_stream_arguments:
+                    warnings.warn(f"Warning: Invalid generate parameter: {key} passed in generate_params. Removing from generate_params.")
+                    generate_params.pop(key)
+            result = client.generate(prompt, **generate_params)
+            yield {"text": result.generated_text}
+    finally:
+        # Decrement the request counter
+        await request_counter.decrement()
+        print(f"Finished request in {int(time.time() - start)} seconds, active requests: {request_counter.counter}")
 
 
 # Start the serverless worker
