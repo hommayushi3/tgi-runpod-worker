@@ -20,6 +20,7 @@ def run(prompt, params={}, stream=False, request_delay=None):
 
     if response.status_code == 200:
         data = response.json()
+        print(data)
         task_id = data.get('id')
         return wait_for_output(task_id, stream=stream, request_delay=request_delay or 0.2)
 
@@ -32,6 +33,7 @@ def cancel_task(task_id):
 
 def wait_for_output(task_id, stream=False, request_delay=0.2):
     url = f"https://api.runpod.ai/v2/{endpoint_id}/stream/{task_id}"
+    print(url)
     previous_output = ''
 
     try:
@@ -39,6 +41,7 @@ def wait_for_output(task_id, stream=False, request_delay=0.2):
             response = requests.get(url, headers=HEADERS)
             if response.status_code == 200:
                 data = response.json()
+                print(data, stream)
                 if len(data['stream']) > 0:
                     new_output = data['stream'][0]['output']
 
@@ -54,6 +57,8 @@ def wait_for_output(task_id, stream=False, request_delay=0.2):
                     
             elif response.status_code >= 400:
                 print(response)
+            else:
+                print("Waiting for output...")
             # Sleep for request_delay seconds between each request
             sleep(request_delay)
     except Exception as e:

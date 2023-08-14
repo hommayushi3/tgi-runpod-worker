@@ -92,7 +92,7 @@ async def handler(job):
                 if key not in valid_non_stream_arguments:
                     warnings.warn(f"Warning: Invalid generate parameter: {key} passed in generate_params. Removing from generate_params.")
                     generate_params.pop(key)
-            result = client.generate(prompt, **generate_params)
+            result = await client.generate(prompt, **generate_params)
             yield {"text": result.generated_text}
     finally:
         # Decrement the request counter
