@@ -23,14 +23,14 @@ opentelemetry-api = "^1.15.0"
 opentelemetry-exporter-otlp = "^1.15.0"
 opentelemetry-instrumentation-grpc = "^0.36b0"
 hf-transfer = "^0.1.2"
-sentencepiece = "^0.1.97"
+sentencepiece = "^0.2.1"
 tokenizers = "^0.13.3"
 huggingface-hub = "^0.14.1"
 transformers = "^4.31.0"
 einops = "^0.6.1"
 texttable = { version = "^1.6.7", optional = true }
 datasets = { version = "^2.14.0", optional = true }
-text-generation = "^0.6.0"
+text-generation = "^0.7.0"
 peft = "^0.4.0"
 torch = {version = "^2.0.1+cu118", source = "pytorch-gpu-src"}
 scipy = "^1.11.1"
